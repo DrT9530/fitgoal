@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type CalculatorFormProps = {
   isCalculated: boolean;
@@ -23,6 +23,17 @@ export default function CalculatorForm({ isCalculated, result, onCalculate }: Ca
 
   const [meals, setMeals] = useState<3 | 4 | 5>(3);
   const [proteinLevel, setProteinLevel] = useState<"Low" | "Normal" | "High">("Normal");
+
+  // Auto-select goal based on weight comparison
+  useEffect(() => {
+    const w = parseFloat(weight);
+    const tw = parseFloat(targetWeight);
+    if (!isNaN(w) && !isNaN(tw) && w > 0 && tw > 0) {
+      if (w > tw) setGoal("Lose");
+      else if (w === tw) setGoal("Maintain");
+      else setGoal("Gain");
+    }
+  }, [weight, targetWeight]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -168,18 +179,37 @@ export default function CalculatorForm({ isCalculated, result, onCalculate }: Ca
       {/* Goals */}
       <section className="mt-4">
          <h4 className="text-primary text-xl font-normal mb-6">Goals</h4>
-         <div className="flex flex-wrap gap-4 max-w-2xl">
-            {["Lose", "Maintain", "Gain"].map((g) => (
-                <button
-                   key={g}
-                   type="button"
-                   onClick={() => setGoal(g as any)}
-                   className={`px-10 py-5 uppercase font-bold text-sm tracking-widest rounded-lg transition-all shadow-sm ${goal === g ? 'bg-primary text-white shadow-primary/20 scale-105' : 'bg-[#e2e2e2] text-muted-foreground hover:bg-[#d5d5d5]'}`}
-                >
-                   {g}
-                </button>
-            ))}
-         </div>
+         {(() => {
+           const w = parseFloat(weight);
+           const tw = parseFloat(targetWeight);
+           const hasBoth = !isNaN(w) && !isNaN(tw) && w > 0 && tw > 0;
+           const allowedGoal = hasBoth ? (w > tw ? "Lose" : w === tw ? "Maintain" : "Gain") : null;
+
+           return (
+             <div className="flex flex-wrap gap-4 max-w-2xl">
+               {["Lose", "Maintain", "Gain"].map((g) => {
+                 const isDisabled = hasBoth && allowedGoal !== g;
+                 return (
+                   <button
+                     key={g}
+                     type="button"
+                     disabled={isDisabled}
+                     onClick={() => { if (!isDisabled) setGoal(g as any); }}
+                     className={`px-10 py-5 uppercase font-bold text-sm tracking-widest rounded-lg transition-all shadow-sm ${
+                       goal === g
+                         ? 'bg-primary text-white shadow-primary/20 scale-105'
+                         : isDisabled
+                           ? 'bg-[#e2e2e2] text-muted-foreground/40 opacity-40 cursor-not-allowed'
+                           : 'bg-[#e2e2e2] text-muted-foreground hover:bg-[#d5d5d5]'
+                     }`}
+                   >
+                     {g}
+                   </button>
+                 );
+               })}
+             </div>
+           );
+         })()}
       </section>
 
       {/* Constraints Footer */}

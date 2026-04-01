@@ -1,0 +1,4 @@
+npm error code EUPDATEARGS
+npm error Update arguments must only contain package names, eg:
+npm error     npm update undefined
+npm error A complete log of this run can be found in: C:\Users\Athallah Rizky\AppData\Local\npm-cache\_logs\2026-04-01T09_54_06_537Z-debug-0.log
